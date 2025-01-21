@@ -5,21 +5,23 @@ const FormData = require('form-data');
 // Telegram Bot API details
 const BOT_TOKEN = '8108892194:AAFH1hGnle4g3aBa7fJQsEz0TK2OrCO6i0Q';
 const CHAT_ID = '-4605029522'; // Your chat ID
-
-// TradingView chart URL
-const CHART_URL = 'https://www.tradingview.com/chart/your-chart-link/';
+const CHART_BASE_URL = 'https://www.tradingview.com/chart/'; // Base URL for charts
 
 async function captureAndSendScreenshot(alertData) {
+  let browser;
   try {
+    // Generate the chart URL dynamically based on the ticker
+    const chartUrl = `${CHART_BASE_URL}${alertData.ticker}/`;
+
     // Launch a headless browser
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+    browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
 
     // Set the viewport size (adjust as needed)
     await page.setViewport({ width: 1280, height: 720 });
 
     // Navigate to the TradingView chart
-    await page.goto(CHART_URL, { waitUntil: 'networkidle2' });
+    await page.goto(chartUrl, { waitUntil: 'networkidle2' });
 
     // Capture a screenshot
     const screenshot = await page.screenshot({ type: 'png' });
@@ -51,6 +53,7 @@ async function captureAndSendScreenshot(alertData) {
     console.log('Screenshot and message sent to Telegram!');
   } catch (error) {
     console.error('Error:', error);
+    if (browser) await browser.close();
   }
 }
 
